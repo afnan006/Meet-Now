@@ -7,10 +7,14 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  setUser: (user) => set({ user }),
+  user: JSON.parse(localStorage.getItem('user') || 'null'), // Persist user state from localStorage
+  setUser: (user) => {
+    localStorage.setItem('user', JSON.stringify(user)); // Store user in localStorage
+    set({ user });
+  },
 }));
 
+// The rest of your meeting store remains the same
 interface MeetingState {
   meetingId: string | null;
   participants: string[];
@@ -23,10 +27,10 @@ export const useMeetingStore = create<MeetingState>((set) => ({
   meetingId: null,
   participants: [],
   setMeetingId: (id) => set({ meetingId: id }),
-  addParticipant: (id) => set((state) => ({ 
-    participants: [...state.participants, id] 
+  addParticipant: (id) => set((state) => ({
+    participants: [...state.participants, id],
   })),
-  removeParticipant: (id) => set((state) => ({ 
-    participants: state.participants.filter(p => p !== id) 
+  removeParticipant: (id) => set((state) => ({
+    participants: state.participants.filter((p) => p !== id),
   })),
 }));
