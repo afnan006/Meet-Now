@@ -26,8 +26,8 @@ function App() {
         {/* Route for the login/signup page */}
         <Route path="/login" element={<LoginPage />} />
         
-        {/* Existing route for Auth */}
-        <Route path="/auth" element={<Auth />} />
+        {/* Existing route for Auth
+        <Route path="/auth" element={<Auth />} /> */}
         
         {/* Authenticated routes */}
         <Route
