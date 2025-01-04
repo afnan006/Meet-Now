@@ -1,21 +1,27 @@
+// src/firebase/firebase.ts
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
+import { getStorage } from 'firebase/storage';
 
- const firebaseConfig = {
-     apiKey: "AIzaSyDQSnoYi1n1FuOhfwNUgFPzjSn4OS5sSvk",
-     authDomain: "meet-now-d4f84.firebaseapp.com",
-     projectId: "meet-now-d4f84",
-    storageBucket: "meet-now-d4f84.appspot.com",
-     messagingSenderId: "23120131114",
-     appId: "1:23120131114:web:7c33126371393bc9933f53",
-    measurementId: "G-P8NVJWDHZD"
-   };
+// Firebase configuration object
+const firebaseConfig = {
+  apiKey: "AIzaSyDQSnoYi1n1FuOhfwNUgFPzjSn4OS5sSvk",
+  authDomain: "meet-now-d4f84.firebaseapp.com",
+  projectId: "meet-now-d4f84",
+  storageBucket: "meet-now-d4f84.appspot.com",
+  messagingSenderId: "23120131114",
+  appId: "1:23120131114:web:7c33126371393bc9933f53",
+  measurementId: "G-P8NVJWDHZD"
+};
 
-// Initialize Firebase
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
+
+// Firebase authentication, analytics, and storage initialization
 export const auth = getAuth(app);
 export const analytics = getAnalytics(app);
+export const storage = getStorage(app);
 
 console.log('Firebase initialized with config:', firebaseConfig);
 

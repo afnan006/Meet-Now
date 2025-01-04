@@ -1,3 +1,4 @@
+// src/pages/Meeting.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
@@ -5,23 +6,15 @@ import { useAuthStore } from '../lib/store';
 import { socket } from '../lib/socket';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { validateMeeting } from '../lib/api';
-import { 
-  Video, 
-  Mic, 
-  MicOff, 
-  VideoOff, 
-  MessageSquare, 
-  Users, 
-  X,
-  Send
-} from 'lucide-react';
-import { useMeetingStore } from '../lib/store'; // added for meeting store
+import { Video, Mic, MicOff, VideoOff, MessageSquare, Users, X, Send, Paperclip } from 'lucide-react';
+import { useMeetingStore } from '../lib/store';
 
 interface Message {
   id: string;
   sender: string;
   text: string;
   timestamp: Date;
+  fileUrl?: string; // to handle file URLs for images/documents
 }
 
 export function Meeting() {
@@ -38,6 +31,8 @@ export function Meeting() {
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // state to hold selected file
+  const [fileError, setFileError] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const { remoteStreams } = useWebRTC(id);
   const [timer, setTimer] = useState(0);
@@ -86,12 +81,13 @@ export function Meeting() {
   }, []);
 
   useEffect(() => {
-    const handleNewMessage = (data: { sender: string; text: string; timestamp: string }) => {
+    const handleNewMessage = (data: { sender: string; text: string; timestamp: string; fileUrl?: string }) => {
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         sender: data.sender,
         text: data.text,
-        timestamp: new Date(data.timestamp)
+        timestamp: new Date(data.timestamp),
+        fileUrl: data.fileUrl,
       }]);
     };
 
@@ -119,13 +115,30 @@ export function Meeting() {
   };
 
   const sendMessage = () => {
-    if (newMessage.trim() && user) {
+    if (newMessage.trim() || selectedFile) {
+      const fileUrl = selectedFile ? URL.createObjectURL(selectedFile) : undefined; // Create object URL if file is selected
       socket.emit('message', {
         meeting_id: id,
         sender: user.email,
-        text: newMessage.trim()
+        text: newMessage.trim(),
+        fileUrl: fileUrl, // send the file URL if available
       });
       setNewMessage('');
+      setSelectedFile(null); // reset the file input
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setFileError('File size should be less than 5MB');
+        setSelectedFile(null);
+      } else {
+        setFileError('');
+        setSelectedFile(file);
+      }
     }
   };
 
@@ -225,20 +238,41 @@ export function Meeting() {
               >
                 <p className="text-sm font-medium">{message.sender}</p>
                 <p>{message.text}</p>
+                {message.fileUrl && (
+                  <div className="mt-2">
+                    {message.fileUrl.includes('image') ? (
+                      <img src={message.fileUrl} alt="file" className="w-20 h-20 object-cover" />
+                    ) : (
+                      <a href={message.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline">View Document</Button>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
           <div className="p-4 border-t border-stone-200">
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-input"
+              />
+              <label htmlFor="file-input" className="cursor-pointer">
+                <Paperclip className="h-5 w-5 text-stone-500" />
+              </label>
+              {fileError && <p className="text-sm text-red-500">{fileError}</p>}
               <input
                 type="text"
+                className="flex-1 p-2 border rounded-lg text-sm"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-3 py-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Type a message"
               />
-              <Button onClick={sendMessage}>
+              <Button variant="primary" onClick={sendMessage}>
                 <Send className="h-5 w-5" />
               </Button>
             </div>
