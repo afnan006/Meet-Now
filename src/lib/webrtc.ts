@@ -58,7 +58,8 @@
 //     this.peerConnection.close();
 //   }
 // } 
-// src/hooks/useWebRTC.ts
+
+//src/hooks/useWebRTC.ts
 export class WebRTCConnection {
   private peerConnection: RTCPeerConnection;
   private localStream: MediaStream;
@@ -109,4 +110,3 @@ export function useWebRTC() {
   // Example hook functionality, could be extended for reusable state management
   return {};
 }
-
