@@ -1,3 +1,4 @@
+
 // import { useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import { Button } from '../components/Button';
@@ -12,10 +13,9 @@
 //   timestamp: Date;
 // }
 
-
-
 // export function Dashboard() {
 //   const [meetings, setMeetings] = useState<Meeting[]>([]);
+//   const [meetingLink, setMeetingLink] = useState('');
 //   const navigate = useNavigate();
 //   const user = useAuthStore((state) => state.user);
 //   const setUser = useAuthStore((state) => state.setUser);
@@ -37,7 +37,8 @@
 //       const updatedMeetings = [newMeeting, ...meetings];
 //       setMeetings(updatedMeetings);
 //       localStorage.setItem('meetings', JSON.stringify(updatedMeetings));
-//       navigate(`/meeting/${meeting_id}`);
+//       const link = `${window.location.origin}/meeting/${meeting_id}`;
+//       setMeetingLink(link);
 //     } catch (error) {
 //       console.error('Error creating meeting:', error);
 //     }
@@ -75,6 +76,22 @@
 //             Create New Meeting
 //           </Button>
 
+//           {meetingLink && (
+//             <div className="mb-4">
+//               <p>Share this link with participants:</p>
+//               <a href={meetingLink} target="_blank" rel="noopener noreferrer">
+//                 {meetingLink}
+//               </a>
+//               <Button
+//                 onClick={() => navigator.clipboard.writeText(meetingLink)}
+//                 className="ml-2"
+//               >
+//                 <Copy className="h-5 w-5" />
+//                 Copy Link
+//               </Button>
+//             </div>
+//           )}
+
 //           {meetings.length > 0 && (
 //             <div className="bg-white rounded-lg shadow-sm">
 //               <div className="p-4 border-b border-stone-200">
@@ -111,6 +128,7 @@
 //   );
 // }
 
+// export default Dashboard;
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
@@ -137,7 +155,7 @@ export function Dashboard() {
     if (storedMeetings) {
       setMeetings(JSON.parse(storedMeetings).map((m: any) => ({
         ...m,
-        timestamp: new Date(m.timestamp)
+        timestamp: new Date(m.timestamp),
       })));
     }
   }, []);
@@ -153,12 +171,19 @@ export function Dashboard() {
       setMeetingLink(link);
     } catch (error) {
       console.error('Error creating meeting:', error);
+      alert('Failed to create a meeting. Please try again.');
     }
   };
 
-  const copyMeetingLink = (meetingId: string) => {
+  const copyMeetingLink = async (meetingId: string) => {
     const link = `${window.location.origin}/meeting/${meetingId}`;
-    navigator.clipboard.writeText(link);
+    try {
+      await navigator.clipboard.writeText(link);
+      alert('Meeting link copied to clipboard.');
+    } catch (error) {
+      console.error('Error copying link:', error);
+      alert('Failed to copy the link. Please copy it manually.');
+    }
   };
 
   const handleSignOut = async () => {
@@ -191,11 +216,11 @@ export function Dashboard() {
           {meetingLink && (
             <div className="mb-4">
               <p>Share this link with participants:</p>
-              <a href={meetingLink} target="_blank" rel="noopener noreferrer">
+              <a href={meetingLink} target="_blank" rel="noopener noreferrer" className="text-rose-500">
                 {meetingLink}
               </a>
               <Button
-                onClick={() => navigator.clipboard.writeText(meetingLink)}
+                onClick={() => copyMeetingLink(meetingLink)}
                 className="ml-2"
               >
                 <Copy className="h-5 w-5" />
@@ -211,20 +236,29 @@ export function Dashboard() {
               </div>
               <div className="divide-y divide-stone-200">
                 {meetings.map((meeting) => (
-                  <div key={meeting.id} className="p-4 flex items-center justify-between">
+                  <div
+                    key={meeting.id}
+                    className="p-4 flex items-center justify-between"
+                  >
                     <div>
-                      <p className="font-medium text-stone-900">Meeting {meeting.id.slice(0, 8)}</p>
-                      <p className="text-sm text-stone-600">{formatDate(meeting.timestamp)}</p>
+                      <p className="font-medium text-stone-900">
+                        Meeting {meeting.id.slice(0, 8)}
+                      </p>
+                      <p className="text-sm text-stone-600">
+                        {formatDate(meeting.timestamp)}
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         onClick={() => copyMeetingLink(meeting.id)}
+                        className="text-sm"
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                       <Button
                         onClick={() => navigate(`/meeting/${meeting.id}`)}
+                        className="text-sm"
                       >
                         Join
                       </Button>
